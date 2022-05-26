@@ -2,6 +2,7 @@ import {
   ORDER_CREATE_FAIL,
   ORDER_CREATE_REQUEST,
   ORDER_CREATE_SUCCESS,
+  ORDER_DETAILS_FAIL,
   ORDER_DETAILS_REQUEST,
   ORDER_DETAILS_SUCCESS,
   ORDER_PAY_FAIL,
@@ -70,7 +71,7 @@ export const getOrderDetails = id => async (dispatch, getState) => {
     });
   } catch (err) {
     dispatch({
-      type: ORDER_CREATE_FAIL,
+      type: ORDER_DETAILS_FAIL,
       payload:
         err.response && err.response.data.message
           ? err.response.data.message

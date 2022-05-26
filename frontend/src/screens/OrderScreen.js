@@ -5,21 +5,86 @@ import { useDispatch, useSelector } from "react-redux";
 import Message from "../components/Message";
 import Loader from "../components/Loader";
 import FormContainer from "../components/FormContainer";
-import { getOrderDetails } from "../actions/orderActions";
+import { getOrderDetails, payOrder } from "../actions/orderActions";
+import axios from "axios";
+import { ORDER_PAY_RESET } from "../actions/types";
+import { PayPalButton } from "react-paypal-button-v2";
 
 const OrderScreen = () => {
   const navigate = useNavigate();
+
   const dispatch = useDispatch();
+
   const { id } = useParams();
+
+  const [sdkReady, setSdkReady] = useState(false);
 
   const orderDetails = useSelector(state => state.orderDetails);
   const { order, error, loading } = orderDetails;
+
+  const orderPay = useSelector(state => state.orderPay);
+  const {
+    error: errorPay,
+    success: successPay,
+    loading: loadingPay
+  } = orderPay;
+
+  const loadScript = src => {
+    return new Promise(resolve => {
+      const script = document.createElement("script");
+      script.src = src;
+      script.onload = () => {
+        resolve(true);
+      };
+      script.onerror = () => {
+        resolve(false);
+      };
+      document.body.appendChild(script);
+    });
+  };
+
+  const displayRazorpay = async amount => {
+    const res = await loadScript(
+      "https://checkout.razorpay.com/v1/checkout.js"
+    );
+    console.log(res);
+    if (!res) {
+      alert("You are offline...failed to load Razorpay sdk");
+      return;
+    }
+
+    const options = {
+      key: "",
+      currency: "INR",
+      amount: amount * 100,
+      name: "ProShop",
+      description: "Thank u :)",
+      image: "",
+      handler: function(response) {
+        alert(response.razorpay_payment_id);
+        alert("payment done ;)");
+        console.log(response);
+      },
+      prefill: {
+        name: "ProShop"
+      }
+    };
+    const paymentObject = new window.Razorpay(options);
+    paymentObject.open();
+  };
+
   useEffect(() => {
-    if (!order || order._id !== id) {
+    if (!order || order._id !== id || successPay) {
+      dispatch({ type: ORDER_PAY_RESET });
       dispatch(getOrderDetails(id));
     }
-  }, [dispatch, id]);
-  const placeOrderHandler = () => {};
+  }, [dispatch, id, successPay, order]);
+
+  const successPaymentHandler = paymentResult => {
+    console.log(paymentResult);
+    dispatch(payOrder(id, paymentResult));
+  };
+
   return loading ? (
     <Loader />
   ) : error ? (
@@ -143,6 +208,27 @@ const OrderScreen = () => {
               {error && (
                 <ListGroup.Item>
                   <Message variant="danger">{error}</Message>
+                </ListGroup.Item>
+              )}
+              {!order.isPaid && (
+                <ListGroup.Item>
+                  {/* {loadingPay && <Loader />} */}
+                  {/* {!sdkReady ? (
+                    <Loader />
+                  ) : (
+                    <Button
+                      type="button"
+                      onClick={() => displayRazorpay(order.totalPrice)}
+                    >
+                      ORDER
+                    </Button>
+                  )} */}
+                  <Button
+                    type="button"
+                    onClick={() => displayRazorpay(order.totalPrice)}
+                  >
+                    ORDER
+                  </Button>
                 </ListGroup.Item>
               )}
             </ListGroup>
