@@ -11,11 +11,7 @@ const PlaceOrderScreen = () => {
   const cart = useSelector(state => state.cart);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  if (!cart.shippingAddress.address) {
-    navigate("/shipping");
-  } else if (!cart.paymentMethod) {
-    navigate("/payment");
-  }
+
   //Calculate prices
   const addDecimal = num => {
     return (Math.round(num * 100) / 100).toFixed(2);
@@ -34,6 +30,11 @@ const PlaceOrderScreen = () => {
   const orderCreate = useSelector(state => state.orderCreate);
   const { order, success, error } = orderCreate;
   useEffect(() => {
+    if (!cart.shippingAddress.address) {
+      navigate("/shipping");
+    } else if (!cart.paymentMethod) {
+      navigate("/payment");
+    }
     if (success) {
       navigate(`/order/${order._id}`);
     }

@@ -4,20 +4,19 @@ import { Row, Col, ListGroup, Image, Card, Button } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import Message from "../components/Message";
 import Loader from "../components/Loader";
-import FormContainer from "../components/FormContainer";
 import { getOrderDetails, payOrder } from "../actions/orderActions";
 import axios from "axios";
-import { ORDER_PAY_RESET } from "../actions/types";
-import { PayPalButton } from "react-paypal-button-v2";
+import { ORDER_DELIVER_RESET, ORDER_PAY_RESET } from "../actions/types";
+import { deliverOrder } from "../actions/orderActions";
 
 const OrderScreen = () => {
   const navigate = useNavigate();
 
   const dispatch = useDispatch();
 
-  const { id } = useParams();
+  const userInfo = useSelector(state => state.userLogin.userInfo);
 
-  const [sdkReady, setSdkReady] = useState(false);
+  const { id } = useParams();
 
   const orderDetails = useSelector(state => state.orderDetails);
   const { order, error, loading } = orderDetails;
@@ -29,60 +28,130 @@ const OrderScreen = () => {
     loading: loadingPay
   } = orderPay;
 
-  const loadScript = src => {
-    return new Promise(resolve => {
-      const script = document.createElement("script");
-      script.src = src;
-      script.onload = () => {
-        resolve(true);
-      };
-      script.onerror = () => {
-        resolve(false);
-      };
-      document.body.appendChild(script);
-    });
-  };
+  const orderDeliver = useSelector(state => state.orderDeliver);
+  const {
+    error: errorDeliver,
+    success: successDeliver,
+    loading: loadingDeliver
+  } = orderDeliver;
 
-  const displayRazorpay = async amount => {
-    const res = await loadScript(
-      "https://checkout.razorpay.com/v1/checkout.js"
-    );
-    console.log(res);
-    if (!res) {
-      alert("You are offline...failed to load Razorpay sdk");
-      return;
-    }
+  const loadScript = () => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = async () => {
+      try {
+        const result = await axios.post(
+          "/api/orders/payment/create",
+          {
+            amount: order.totalPrice * 100
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userInfo.token}`
+            }
+          }
+        );
 
-    const options = {
-      key: "",
-      currency: "INR",
-      amount: amount * 100,
-      name: "ProShop",
-      description: "Thank u :)",
-      image: "",
-      handler: function(response) {
-        alert(response.razorpay_payment_id);
-        alert("payment done ;)");
-        console.log(response);
-      },
-      prefill: {
-        name: "ProShop"
-      }
+        const { amount, id: order_id, currency } = result.data;
+        const razorpayKey = await axios.get("/api/config/razorpay");
+
+        const options = {
+          key: razorpayKey,
+          amount: amount.toString(),
+          currency: "INR",
+          name: "Miss. example",
+          description: "example",
+          order_id: order_id,
+          handler: async function(response) {
+            const result = await axios.post(
+              `/api/orders/payment/${id}/pay`,
+              {
+                amount: amount,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpaySignature: response.razorpay_signature
+              },
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${userInfo.token}`
+                }
+              }
+            );
+            alert("Payment done: ", response.razorpay_payment_id);
+            dispatch(payOrder(result));
+          },
+          prefill: {
+            name: "example.name",
+            email: "example@gmail.com",
+            contact: "1111111111"
+          },
+          notes: {
+            address: ",kdkc,"
+          },
+          theme: {
+            color: "#80c0f0"
+          }
+        };
+        const paymentObject = new window.Razorpay(options);
+        paymentObject.open();
+      } catch (error) {}
     };
-    const paymentObject = new window.Razorpay(options);
-    paymentObject.open();
+    script.onerror = () => {
+      alert("Razorpay SDK failed to load:(");
+    };
+    document.body.appendChild(script);
   };
+
+  // const displayRazorpay = async  => {
+  //   const res = await loadScript(
+  //     "https://checkout.razorpay.com/v1/checkout.js"
+  //   );
+  //   console.log(res);
+  //   if (!res) {
+  //     alert("You are offline...failed to load Razorpay sdk");
+  //     return;
+  //   }
+
+  //   const options = {
+  //     key: "rzp_test_ruAsDs06lHrWTB",
+  //     currency: "INR",
+  //     amount: amount * 100,
+  //     name: "ProShop",
+  //     description: "Thank u :)",
+  //     image: "",
+  //     handler: function(response) {
+  //       alert(response.razorpay_payment_id);
+  //       alert("payment done ;)");
+  //       console.log(response);
+  //     },
+  //     prefill: {
+  //       name: "ProShop"
+  //     }
+  //   };
+  //   const paymentObject = new window.Razorpay(options);
+  //   paymentObject.open();
+  // };
 
   useEffect(() => {
-    if (!order || order._id !== id || successPay) {
+    if (!userInfo) {
+      navigate("/login");
+    }
+    if (!order || order._id !== id || successPay || successDeliver) {
+      dispatch({ type: ORDER_DELIVER_RESET });
       dispatch({ type: ORDER_PAY_RESET });
       dispatch(getOrderDetails(id));
     }
-  }, [dispatch, id, successPay, order]);
+  }, [dispatch, id, successPay, order, successDeliver]);
 
   const successPaymentHandler = paymentResult => {
     console.log(paymentResult);
     dispatch(payOrder(id, paymentResult));
+  };
+
+  const deliverHandler = () => {
+    dispatch(deliverOrder(order));
   };
 
   return loading ? (
@@ -113,7 +182,9 @@ const OrderScreen = () => {
                 {order.shippingAddress.country}
               </p>
               {order.isDelivered ? (
-                <Message variant="success">Paid on {order.deliveredAt}</Message>
+                <Message variant="success">
+                  Delivered on {order.deliveredAt}
+                </Message>
               ) : (
                 <Message variant="danger">Not Delivered</Message>
               )}
@@ -141,7 +212,7 @@ const OrderScreen = () => {
                       <Row>
                         <Col md={1}>
                           <Image
-                            src={item.image}
+                            src={window.location.origin + "/" + item.image}
                             alt={item.name}
                             fluid
                             rounded
@@ -210,7 +281,7 @@ const OrderScreen = () => {
                   <Message variant="danger">{error}</Message>
                 </ListGroup.Item>
               )}
-              {!order.isPaid && (
+              {!order.isPaid && order.user === userInfo._id && (
                 <ListGroup.Item>
                   {/* {loadingPay && <Loader />} */}
                   {/* {!sdkReady ? (
@@ -223,14 +294,22 @@ const OrderScreen = () => {
                       ORDER
                     </Button>
                   )} */}
-                  <Button
-                    type="button"
-                    onClick={() => displayRazorpay(order.totalPrice)}
-                  >
+                  <Button type="button" onClick={loadScript}>
                     ORDER
                   </Button>
                 </ListGroup.Item>
               )}
+              {loadingDeliver && <Loader />}
+              {userInfo &&
+                userInfo.isAdmin &&
+                order.isPaid &&
+                !order.isDelivered && (
+                  <ListGroup.Item>
+                    <Button type="button" onClick={deliverHandler}>
+                      Mark as Delivered
+                    </Button>
+                  </ListGroup.Item>
+                )}
             </ListGroup>
           </Card>
         </Col>

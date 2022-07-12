@@ -17,7 +17,7 @@ const PaymentScreen = () => {
 
   const userLogin = useSelector(state => state.userLogin);
   const { userInfo } = userLogin;
-  const [paymentMethod, setPaymentMethod] = useState("PayPal");
+  const [paymentMethod, setPaymentMethod] = useState("RazorPay");
 
   useEffect(() => {
     if (!userInfo) {
@@ -42,7 +42,7 @@ const PaymentScreen = () => {
           <Col>
             <Form.Check
               type="radio"
-              label="PayPal or Credit Card"
+              label="RazorPay or Credit Card"
               id="PayPal"
               name="paymentMethod"
               value="PayPal"
