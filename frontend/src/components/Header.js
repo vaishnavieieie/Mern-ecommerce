@@ -18,11 +18,20 @@ const Header = props => {
   };
   return (
     <header>
-      <Navbar bg="primary" variant="dark" expand="lg" collapseOnSelect>
+      <Navbar bg="light" data-bs-theme="light" expand="lg" collapseOnSelect>
         <Container>
           <LinkContainer to="/">
-            <Navbar.Brand>
-              <h2 style={{ color: "white" }}>ProShop</h2>
+            {/* <Navbar.Brand>
+              <h2 style={{ color: "white" }}>ShopNow</h2>
+            </Navbar.Brand> */}
+            <Navbar.Brand href="#home">
+              <img
+                src="../images/logo_shopnow.png"
+                width="350"
+                height="50"
+                className=""
+                alt="React Bootstrap logo"
+              />
             </Navbar.Brand>
           </LinkContainer>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />

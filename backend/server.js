@@ -21,10 +21,6 @@ if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
-app.get("/", (req, res) => {
-  res.send("Home");
-});
-
 app.use("/api/products", productRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/orders", orderRoutes);
@@ -39,7 +35,22 @@ app.get("/api/config/razorpay", (req, res) =>
   res.send(process.env.RAZORPAY_KEY_ID)
 );
 const __dirname = path.resolve();
+
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "/frontend/build")));
+  app.get("*", (req, res) => {
+    res.sendFile(
+      path.resolve(__dirname, "..", "frontend", "build", "index.html")
+    );
+  });
+} else {
+  app.get("/", (req, res) => {
+    res.send("Home");
+  });
+}
+
 app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
+
 //Custom middleware : not found
 app.use(notFound);
 

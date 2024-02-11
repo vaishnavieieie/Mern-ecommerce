@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Form, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { withRouter } from "react-router-dom";
+import { Image } from "react-bootstrap";
 
 const SearchBox = () => {
   const [keyword, setKeyword] = useState("");
@@ -21,10 +22,16 @@ const SearchBox = () => {
         name="q"
         onChange={e => setKeyword(e.target.value)}
         placeholder="Search Products"
-        className="mr-sm-2 ml-sm-5 "
+        className="mr-sm-2 ml-sm-5 rounded"
       ></Form.Control>
-      <Button type="submit" variant="outline-success" className="p-2">
-        Search
+      <Button type="submit" variant="" className="p-2 ">
+        <i
+          class="fa-solid fa-magnifying-glass"
+          // style={{ color: "#B197FC" }}
+          size="xl"
+        ></i>
+        {/* search */}
+        {/* <Image src="../images/search.png" fluid width={30} height={30} /> */}
       </Button>
     </Form>
   );

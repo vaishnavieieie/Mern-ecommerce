@@ -11,6 +11,7 @@ import Loader from "../components/Loader";
 import Paginate from "../components/Paginate";
 import ProductCarousel from "../components/ProductCarousel";
 import Meta from "../components/Meta";
+import { Image } from "react-bootstrap";
 
 const HomeScreen = props => {
   const dispatch = useDispatch();
@@ -29,13 +30,26 @@ const HomeScreen = props => {
     <>
       <Meta />
       {!keyword ? (
-        <ProductCarousel />
+        <div className="my-5">
+          <h1>
+            Top Rated{" "}
+            <i class="fa-solid fa-star" style={{ color: "#d7b7d6" }}></i>
+          </h1>
+          <ProductCarousel />
+        </div>
       ) : (
-        <Link to="/" className="btn btn-light">
+        <Link to="/" className="btn btn-light my-2">
+          <i
+            className="fa-solid fa-arrow-left m-2"
+            style={{ color: "#d7b7d6" }}
+          ></i>
           Go Back
         </Link>
       )}
-      <h1>Latest Products</h1>
+      <h1>
+        Latest Products{" "}
+        <i class="fa-solid fa-shirt" style={{ color: "#d7b7d6" }}></i>
+      </h1>
       {loading ? (
         <Loader />
       ) : error ? (
@@ -43,7 +57,7 @@ const HomeScreen = props => {
       ) : products.length === 0 ? (
         <Message>No products Found for "{keyword}"</Message>
       ) : (
-        <>
+        <div className="mb-5">
           <Row>
             {products.map(product => (
               <Col key={product._id} sm={12} md={6} lg={4} xl={3}>
@@ -56,7 +70,7 @@ const HomeScreen = props => {
             page={page}
             keyword={keyword ? keyword : ""}
           />
-        </>
+        </div>
       )}
     </>
   );

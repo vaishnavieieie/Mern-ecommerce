@@ -74,7 +74,11 @@ const ProductScreen = props => {
 
   return (
     <>
-      <Link className="btn btn-light my-3" to="/">
+      <Link className="btn btn-light my-2" to="/">
+        <i
+          className="fa-solid fa-arrow-left m-2"
+          style={{ color: "#d7b7d6" }}
+        ></i>
         Go Back
       </Link>
       {loading ? (
@@ -253,7 +257,7 @@ const ProductScreen = props => {
                             onChange={e => setComment(e.target.value)}
                           ></Form.Control>
                         </Form.Group>
-                        <Button type="submit" variant="dark">
+                        <Button type="submit" variant="dark" className="my-2">
                           Submit
                         </Button>
                       </Form>

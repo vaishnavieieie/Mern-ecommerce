@@ -4,10 +4,10 @@ import { Container, Row, Col } from "react-bootstrap";
 
 const Footer = props => {
   return (
-    <footer>
+    <footer style={{ backgroundColor: "#D7B7D6" }}>
       <Container>
         <Row>
-          <Col className="text-center py-3">Copyright &copy; ProShop</Col>
+          <Col className="text-center py-3">Copyright &copy; ShopNow</Col>
         </Row>
       </Container>
     </footer>

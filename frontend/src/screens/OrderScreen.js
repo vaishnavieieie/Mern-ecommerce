@@ -36,6 +36,7 @@ const OrderScreen = () => {
   } = orderDeliver;
 
   const loadScript = () => {
+    console.log("script loaded");
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.onload = async () => {
@@ -54,10 +55,12 @@ const OrderScreen = () => {
         );
 
         const { amount, id: order_id, currency } = result.data;
+        console.log("hello", result.data);
         const razorpayKey = await axios.get("/api/config/razorpay");
-
+        console.log(razorpayKey.data);
+        console.log("hello", id);
         const options = {
-          key: razorpayKey,
+          key: razorpayKey.data,
           amount: amount.toString(),
           currency: "INR",
           name: "Miss. example",
@@ -95,6 +98,15 @@ const OrderScreen = () => {
           }
         };
         const paymentObject = new window.Razorpay(options);
+        paymentObject.on("payment.failed", function(response) {
+          alert(response.error.code);
+          alert(response.error.description);
+          alert(response.error.source);
+          alert(response.error.step);
+          alert(response.error.reason);
+          alert(response.error.metadata.order_id);
+          alert(response.error.metadata.payment_id);
+        });
         paymentObject.open();
       } catch (error) {}
     };
@@ -118,7 +130,7 @@ const OrderScreen = () => {
   //     key: "rzp_test_ruAsDs06lHrWTB",
   //     currency: "INR",
   //     amount: amount * 100,
-  //     name: "ProShop",
+  //     name: "ShopNow",
   //     description: "Thank u :)",
   //     image: "",
   //     handler: function(response) {
@@ -127,7 +139,7 @@ const OrderScreen = () => {
   //       console.log(response);
   //     },
   //     prefill: {
-  //       name: "ProShop"
+  //       name: "ShopNow"
   //     }
   //   };
   //   const paymentObject = new window.Razorpay(options);
@@ -138,12 +150,13 @@ const OrderScreen = () => {
     if (!userInfo) {
       navigate("/login");
     }
+    console.log(order.isPaid, order.user, userInfo._id);
     if (!order || order._id !== id || successPay || successDeliver) {
       dispatch({ type: ORDER_DELIVER_RESET });
       dispatch({ type: ORDER_PAY_RESET });
       dispatch(getOrderDetails(id));
     }
-  }, [dispatch, id, successPay, order, successDeliver]);
+  }, [dispatch, id, successPay, order, successDeliver, userInfo]);
 
   const successPaymentHandler = paymentResult => {
     console.log(paymentResult);
@@ -281,7 +294,7 @@ const OrderScreen = () => {
                   <Message variant="danger">{error}</Message>
                 </ListGroup.Item>
               )}
-              {!order.isPaid && order.user === userInfo._id && (
+              {order && !order.isPaid && order.user._id === userInfo._id && (
                 <ListGroup.Item>
                   {/* {loadingPay && <Loader />} */}
                   {/* {!sdkReady ? (

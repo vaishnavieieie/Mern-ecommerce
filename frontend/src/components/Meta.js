@@ -11,7 +11,7 @@ const Meta = ({ title, description, keywords }) => {
   );
 };
 Meta.defaultProps = {
-  title: "Welcome to proshop",
+  title: "Welcome to ShopNow",
   description: "best products at unbelievable prices!",
   keywords: "buy products,cheap products,products"
 };

@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-const Rating = ({ value, text, color = "#f8e825" }) => {
+const Rating = ({ value, text, color = "yellow" }) => {
   return (
     <div className="rating">
       <span>
